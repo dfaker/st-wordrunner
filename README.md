@@ -1,6 +1,8 @@
 # st-wordrunner
 Silly Tavern word runner extension. 
 
+https://github.com/user-attachments/assets/d979d478-b44d-4932-b9d6-9864bc9b1637
+
 Will 'word run' character responses in a verierty of themes:
 
 <img width="1545" height="1124" alt="image" src="https://github.com/user-attachments/assets/8ee392c1-62c3-4536-a13c-6c8e9f637362" />
