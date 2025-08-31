@@ -1,0 +1,10 @@
+{
+  "display_name": "WordRunner Autoplay",
+  "loading_order": 50,
+  "js": "index.js",
+  "author": "dfaker",
+  "version": "1.0.0",
+  "homePage": "https://github.com/dfaker/st-wordrunner",
+  "auto_update": true,
+  "minimum_client_version": "1.11.0"
+}
