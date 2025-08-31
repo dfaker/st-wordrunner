@@ -320,13 +320,21 @@ document.addEventListener('click', (e) => {
 
   function applyTheme() {
     const root = ensureOverlay();
-    const settings = getSettings();
-    const theme = settings.theme || 'default';
-    root.classList.remove('wr-theme-default','wr-theme-dark-red','wr-theme-dark-blue','wr-theme-sepia','wr-theme-paper');
-    root.classList.add(`wr-theme-${theme}`);
-    root.style.setProperty('--wr-font-min', `${settings.fontMinPx}px`);
-    root.style.setProperty('--wr-font-preferred', `${settings.fontPreferredVw}vw`);
-    root.style.setProperty('--wr-font-max', `${settings.fontMaxPx}px`);
+    const S = getSettings();
+    const theme = S.theme || 'default';
+    const THEMES = {
+      'default': { '--wr-bg':'#0b0f1aEE','--wr-text':'#e5e7eb','--wr-subtext':'#94a3b8','--wr-pivot':'#60a5fa','--wr-caret':'#7f1734','--wr-chrome-border':'#1f2937','--wr-button-bg':'#111827','--wr-button-bg-hover':'#0f172a','--wr-button-border':'#1f2937' },
+      'dark-red': { '--wr-bg':'#0c0c11EE','--wr-text':'#f3f4f6','--wr-subtext':'#9ca3af','--wr-pivot':'#ef4444','--wr-caret':'#f59e0b','--wr-chrome-border':'#262b36','--wr-button-bg':'#141826','--wr-button-bg-hover':'#101524','--wr-button-border':'#262b36' },
+      'dark-blue': { '--wr-bg':'#0b1220EE','--wr-text':'#eef2f7','--wr-subtext':'#a1a9b8','--wr-pivot':'#3b82f6','--wr-caret':'#22c55e','--wr-chrome-border':'#1f2a44','--wr-button-bg':'#101a2c','--wr-button-bg-hover':'#0d1626','--wr-button-border':'#1f2a44' },
+      'sepia': { '--wr-bg':'#f6e8c6EE','--wr-text':'#1b1b1b','--wr-subtext':'#3b3b3b','--wr-pivot':'#dc2626','--wr-caret':'#7f1734','--wr-chrome-border':'#e0cfaa','--wr-button-bg':'#f3e2bb','--wr-button-bg-hover':'#ead7ac','--wr-button-border':'#e0cfaa' },
+      'paper': { '--wr-bg':'#fafafaEE','--wr-text':'#111111','--wr-subtext':'#333333','--wr-pivot':'#7f1734','--wr-caret':'#7f1734','--wr-chrome-border':'#e5e7eb','--wr-button-bg':'#f3f4f6','--wr-button-bg-hover':'#e5e7eb','--wr-button-border':'#e5e7eb' },
+    };
+    for (const [k,v] of Object.entries(THEMES[theme] || THEMES.default)) {
+      root.style.setProperty(k, v);
+    }
+    root.style.setProperty('--wr-font-min', `${S.fontMinPx}px`);
+    root.style.setProperty('--wr-font-preferred', `${S.fontPreferredVw}vw`);
+    root.style.setProperty('--wr-font-max', `${S.fontMaxPx}px`);
   }
 
 
@@ -400,12 +408,22 @@ document.addEventListener('click', (e) => {
     if (overlayRoot) return overlayRoot;
 
      const css = `
+
+    @media (max-width: 1000px) {
+      #wordrunner-range { display:none; }
+      #wordrunner-compose { display:none; }
+    }
+
     #wordrunner-overlay {
       position:fixed; inset:0; z-index:999999;
       background:var(--wr-bg);
       backdrop-filter:saturate(120%) blur(2px);
-      display:none; flex-direction:column;
+      display:none; 
+      flex-direction:column;
     }
+
+    #wordrunner-overlay.wr-open { display: flex !important; }
+
     #wordrunner-chrome {
       display:flex; align-items:center; gap:.75rem;
       padding:.75rem 1rem;
@@ -505,6 +523,7 @@ document.addEventListener('click', (e) => {
       --wr-chrome-border:#e5e7eb;
       --wr-button-bg:#f3f4f6; --wr-button-bg-hover:#e5e7eb; --wr-button-border:#e5e7eb;
     }
+
     `.trim();
 
 
@@ -538,7 +557,32 @@ document.addEventListener('click', (e) => {
       <div id="wordrunner-hidden" tabindex="0"></div>
     `;
     (document.head || document.getElementsByTagName('head')[0]).appendChild(style);
-    document.body.appendChild(overlayRoot);
+    document.documentElement.appendChild(overlayRoot);
+    overlayRoot.style.setProperty('position', 'fixed', 'important');
+    overlayRoot.style.setProperty('inset', '0', 'important');
+    overlayRoot.style.setProperty('z-index', '2147483647', 'important');
+    overlayRoot.style.display = 'none'; // default: hidden
+
+    overlayRoot.style.setProperty('flex-direction', 'column', 'important');
+    overlayRoot.style.setProperty('isolation', 'isolate'); // own stacking context
+    //overlayRoot.style.setProperty('contain', 'layout paint size'); // immune to ancestors
+
+    overlayRoot.style.setProperty('position', 'fixed', 'important');
+    overlayRoot.style.setProperty('top', '0', 'important');
+    overlayRoot.style.setProperty('right', '0', 'important');
+    overlayRoot.style.setProperty('bottom', '0', 'important');
+    overlayRoot.style.setProperty('left', '0', 'important');
+
+    overlayRoot.style.setProperty('width', '100vw', 'important');
+    overlayRoot.style.setProperty('height', '100vh', 'important');
+    overlayRoot.style.setProperty('max-width', '100vw', 'important');
+    overlayRoot.style.setProperty('max-height', '100vh', 'important');
+    overlayRoot.style.setProperty('box-sizing', 'border-box', 'important');
+
+
+
+    overlayRoot.style.background = 'rgba(11,15,26,0.93)';
+
     return overlayRoot;
   }
 
@@ -582,6 +626,14 @@ document.addEventListener('click', (e) => {
     const settings = getSettings();
     const DEFAULT_WPM = Math.max(100, Math.min(1200, settings.defaultWPM || 300));
     const root = ensureOverlay();
+
+    const htmlPrev = document.documentElement.style.transform || '';
+    const bodyPrev = document.body.style.transform || '';
+    overlayRoot.dataset.wrPrevHtmlTransform = htmlPrev;
+    overlayRoot.dataset.wrPrevBodyTransform = bodyPrev;
+    document.documentElement.style.transform = 'none';
+    document.body.style.transform = 'none';
+
     const elWord = root.querySelector('#wordrunner-word');
     const elSub  = root.querySelector('#wordrunner-sub');
     const elPos  = root.querySelector('#wordrunner-pos');
@@ -591,6 +643,9 @@ document.addEventListener('click', (e) => {
     const btnClose=root.querySelector('#wordrunner-close');
     const range  = root.querySelector('#wordrunner-range');
     const wpmLbl = root.querySelector('#wordrunner-wpm');
+
+    const wpmdec  = root.querySelector('#wordrunner-minus');
+    const wpminc = root.querySelector('#wordrunner-plus');
 
     let words = Array.isArray(initialTokens) ? initialTokens.slice() : [];
     let i = 0;
@@ -609,7 +664,20 @@ document.addEventListener('click', (e) => {
       range.value = String(wpm);
       wpmLbl.textContent = String(wpm);
     }
+
+
+    function incWPM() {
+      setWPM(wpm+10);
+    }
+
+    wpminc.onclick = () => incWPM();
+
+    function decWPM() {
+      setWPM(wpm-10); 
+    }
     
+    wpmdec.onclick = () => decWPM();
+
     setWPM(wpm);
     applyTheme();
     
@@ -715,8 +783,14 @@ document.addEventListener('click', (e) => {
     function close() {
       if (timer) clearTimeout(timer);
       playing = false;
+      root.classList.remove('wr-open');
       root.style.display = 'none';
-      document.documentElement.style.overflow = '';
+      document.body.style.overflow = overlayRoot.dataset.wrPrevOverflow || '';
+      document.documentElement.style.transform = overlayRoot.dataset.wrPrevHtmlTransform || '';
+      document.body.style.transform = overlayRoot.dataset.wrPrevBodyTransform || '';
+
+      document.removeEventListener('keydown', onKey);
+
       runner = null;
       manualPin = false;
     }
@@ -728,35 +802,79 @@ document.addEventListener('click', (e) => {
     range.oninput   = (e) => setWPM(Number(e.target.value));
     document.addEventListener('keydown', onKey);
 
-    function onKey(e) {
-      if (root.style.display === 'none') return;
+    function sendMessageText(text) {
+      const { eventSource, event_types } = ctx();
 
+      // 1) Extension bus (preferred if present in your build)
+      try {
+        if (eventSource && event_types?.USER_MESSAGE_REQUESTED) {
+          eventSource.emit(event_types.USER_MESSAGE_REQUESTED, { text });
+          return true;
+        }
+        if (eventSource && event_types?.SEND_MESSAGE) {
+          eventSource.emit(event_types.SEND_MESSAGE, { text });
+          return true;
+        }
+      } catch (_) {}
+
+      // 2) UI controls
+      const ta = document.getElementById('send_textarea');
+      if (ta) {
+        // Make React/vanilla listeners see a real value change
+        ta.focus();
+        ta.value = text;
+        ta.dispatchEvent(new InputEvent('input', { bubbles: true, data: text, inputType: 'insertFromPaste' }));
+        ta.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
+      // Known global in some builds
+      if (typeof window.Generate === 'function') {
+        window.Generate();
+        return true;
+      }
+
+      // Fallback: click the send button if present
+      const sendBtn = document.getElementById('send_but') || document.querySelector('[data-i18n="[title]Send message"]');
+      if (sendBtn) {
+        sendBtn.click();
+        return true;
+      }
+
+      // Last resort: synthesize Enter on the textarea
+      if (ta) {
+        ta.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+        ta.dispatchEvent(new KeyboardEvent('keyup',   { key: 'Enter', bubbles: true }));
+        return true;
+      }
+
+      return false;
+    }
+
+
+    function onKey(e) {
+      if (!root.classList.contains('wr-open')) return;
 
       if (composer?.el) {
         // Compose-mode hotkeys
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault(); e.stopPropagation();
           if (composer.sending) return;
-          const text = composer.el.innerText.replace(/\u200B/g,'').trim();
+
+          const text = composer.el.innerText.replace(/\u200B/g, '').trim();
           if (!text) return;
+
           composer.sending = true;
-          // Keep overlay OPEN; send via the normal chatbar + Generate()
-          try {
-            const ta = document.getElementById('send_textarea');
-            if (ta) {
-              ta.value = text;
-              ta.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-            // Fire the same path as UI "Send"
-            if (typeof window.Generate === 'function') {
-              window.Generate();
-            } else {
-              // Fallback: click paper-plane if present
-              document.getElementById('send_but')?.click();
-            }
-            // Visual: show tiny caret while waiting
-            composer.el.innerHTML = '<span class="caret"></span>';
-          } catch {}
+
+          // keep overlay open, but clear the field visually
+          composer.el.innerHTML = '<span class="caret"></span>';
+
+          const ok = sendMessageText(text);
+
+          // Safety: if nothing actually fired, let the user try again
+          if (!ok) {
+            composer.sending = false;
+            composer.el.textContent = text; // restore so they don't lose it
+          }
           return;
         }
         if (e.key === 'Enter' && e.shiftKey) {
@@ -780,10 +898,14 @@ document.addEventListener('click', (e) => {
       else if (e.key === '-' || e.key === '_'){ setWPM(wpm - 10); }
     }
 
-    root.style.display = 'flex';
+    root.classList.add('wr-open');
     root.style.flexDirection = 'column'; 
+    
+    const prev = document.body.style.overflow;
+    overlayRoot.dataset.wrPrevOverflow = prev || '';
+    document.body.style.overflow = 'hidden';
 
-    document.documentElement.style.overflow = 'hidden';
+
     seenSinceStart = 0;
     setWPM(Math.max(100, Math.round(DEFAULT_WPM)));
     i = 0;
@@ -821,13 +943,6 @@ document.addEventListener('click', (e) => {
 
     };
 
-    const obs = new MutationObserver(() => {
-      if (root.style.display === 'none') {
-        document.removeEventListener('keydown', onKey);
-        obs.disconnect();
-      }
-    });
-    obs.observe(root, { attributes: true, attributeFilter: ['style'] });
 
     return runner;
   }
